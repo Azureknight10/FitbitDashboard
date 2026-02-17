@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>My Fitbit Daily Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-card: #151a2c;
+      --accent: #4ade80;
+      --accent-soft: rgba(74, 222, 128, 0.15);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+      --warning: #fcd34d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #1f2937 0, #020617 55%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .dashboard {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      row-gap: 16px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #22c55e, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      color: #022c22;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0;
+      letter-spacing: 0.03em;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--text-muted);
+    }
+    button.primary {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #ecfdf5;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(34, 197, 94, 0.25);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button.primary:hover { filter: brightness(1.05); }
+    button.primary span.icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+    .status-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+      gap: 16px;
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: minmax(0, 1fr); }
+    }
+    .card {
+      background: radial-gradient(circle at top left, #111827 0, #020617 85%);
+      border-radius: 16px;
+      padding: 16px 18px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 16px 30px rgba(15, 23, 42, 0.85);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .card-title {
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .card-kpi {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 2px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .card-kpi span.unit {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .columns-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .mini-kpi {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .mini-kpi-value {
+      margin-top: 2px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+    .pill-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      background: rgba(55, 65, 81, 0.7);
+      color: var(--text-muted);
+      margin-right: 4px;
+      margin-top: 4px;
+    }
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      margin-top: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 12px;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(31, 41, 55, 0.8);
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-label {
+      color: var(--text-muted);
+      max-width: 65%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .list-value {
+      font-weight: 500;
+      color: var(--text-main);
+      margin-left: 8px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: var(--text-muted);
+    }
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+    .badge-dot.red { background: var(--danger); }
+    .badge-dot.yellow { background: var(--warning); }
+    .json-card {
+      margin-top: 16px;
+      font-size: 11px;
+    }
+    .json-card pre {
+      margin: 8px 0 0;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      max-height: 220px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+    }
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 900px) {
+      .charts-row { grid-template-columns: minmax(0, 1fr); }
+    }
+    .chart-card canvas { width: 100%; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="dashboard">
+    <header>
+      <div class="brand">
+        <div class="brand-badge">FV</div>
+        <div>
+          <h1>Fitbit Daily Dashboard</h1>
+          <div class="subtitle" id="dateLabel">Today</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="pill">LIVE DATA • FITBIT API</div>
+        <button id="loadBtn" class="primary">
+          <span class="icon">⟳</span>
+          Refresh day
+        </button>
+        <span id="status" class="status-text"></span>
+      </div>
+    </header>
+
+    <main>
+      <!-- Left column: activity + charts + goals + workout -->
+      <section>
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Activity</div>
+              <div class="card-kpi">
+                <span id="steps">–</span>
+                <span class="unit">steps</span>
+              </div>
+            </div>
+            <div class="badge">
+              <span class="badge-dot"></span>
+              <span id="activityIntensityLabel">Light–Moderate</span>
+            </div>
+          </div>
+
+          <div class="columns-3">
+            <div>
+              <div class="mini-kpi">Calories burned</div>
+              <div class="mini-kpi-value">
+                <span id="caloriesOut">–</span> kcal
+              </div>
+            </div>
+            <div>
+              <div class="mini-kpi">Distance</div>
+              <div class="mini-kpi-value">
+                <span id="distance">–</span> km
+              </div>
+            </div>
+            <div>
+              <div class="mini-kpi">Active minutes</div>
+              <div class="mini-kpi-value">
+                <span id="activeMinutes">–</span> min
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <span class="pill-tag">Sedentary: <span id="sedentaryMinutes">–</span> min</span>
+            <span class="pill-tag">Light: <span id="lightMinutes">–</span> min</span>
+            <span class="pill-tag">Fairly: <span id="fairlyMinutes">–</span> min</span>
+            <span class="pill-tag">Very: <span id="veryMinutes">–</span> min</span>
+          </div>
+        </section>
+
+        <section class="card" style="margin-top: 12px;">
+          <div class="card-header">
+            <div class="card-title">7-day trends</div>
+          </div>
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="mini-kpi">Steps</div>
+              <canvas id="stepsChart" height="100"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="mini-kpi">Minutes asleep</div>
+              <canvas id="sleepChart" height="100"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="mini-kpi">Calories in</div>
+              <canvas id="caloriesChart" height="100"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" style="margin-top: 12px;">
+          <div class="card-header">
+            <div class="card-title">Today's goals</div>
+          </div>
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="mini-kpi">Steps vs goal</div>
+              <canvas id="stepsGoalChart" height="100"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="mini-kpi">Calories in vs goal</div>
+              <canvas id="caloriesGoalChart" height="100"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="mini-kpi">Sleep vs target</div>
+              <canvas id="sleepGoalChart" height="100"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" style="margin-top: 12px;">
+  <div class="card-header">
+    <div class="card-title">Last 7 workouts</div>
+  </div>
+  <ul class="list" id="workoutsList">
+    <!-- populated by JS -->
+  </ul>
+</section>
+
+      </section>
+
+      <!-- Right column: sleep + nutrition + macros + JSON -->
+      <section>
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Sleep</div>
+              <div class="card-kpi">
+                <span id="sleepHours">–</span>
+                <span class="unit">hrs asleep</span>
+              </div>
+              <div class="mini-kpi" style="margin-top:4px;">
+                <span id="sleepMinutes">–</span> min asleep
+              </div>
+            </div>
+            <div class="badge">
+              <span class="badge-dot yellow"></span>
+              Efficiency <span id="sleepEfficiency">–</span>%
+            </div>
+          </div>
+
+          <div class="columns-3">
+            <div>
+              <div class="mini-kpi">Deep</div>
+              <div class="mini-kpi-value">
+                <span id="deepMinutes">–</span> min
+              </div>
+            </div>
+            <div>
+              <div class="mini-kpi">Light</div>
+              <div class="mini-kpi-value">
+                <span id="lightSleepMinutes">–</span> min
+              </div>
+            </div>
+            <div>
+              <div class="mini-kpi">REM</div>
+              <div class="mini-kpi-value">
+                <span id="remMinutes">–</span> min
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <span class="pill-tag">Wake: <span id="wakeMinutes">–</span> min</span>
+            <span class="pill-tag">Records: <span id="sleepRecords">–</span></span>
+            <span class="pill-tag">Time in bed: <span id="timeInBed">–</span> min</span>
+          </div>
+        </section>
+
+        <section class="card" style="margin-top: 12px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Nutrition</div>
+              <div class="card-kpi">
+                <span id="caloriesIn">–</span>
+                <span class="unit">kcal eaten</span>
+              </div>
+            </div>
+            <div class="badge">
+              <span class="badge-dot red"></span>
+              Goal <span id="calorieGoal">–</span> kcal
+            </div>
+          </div>
+
+          <div class="columns-3">
+            <div>
+              <div class="mini-kpi">Carbs</div>
+              <div class="mini-kpi-value">
+                <span id="carbs">–</span> g
+              </div>
+            </div>
+            <div>
+              <div class="mini-kpi">Protein</div>
+              <div class="mini-kpi-value">
+                <span id="protein">–</span> g
+              </div>
+            </div>
+            <div>
+              <div class="mini-kpi">Fat</div>
+              <div class="mini-kpi-value">
+                <span id="fat">–</span> g
+              </div>
+            </div>
+          </div>
+
+          <ul class="list" id="foodsList"></ul>
+
+          <div class="card" style="margin-top: 12px;">
+            <div class="card-header">
+              <div class="card-title">Macros today</div>
+            </div>
+            <canvas id="macroChart" height="120"></canvas>
+          </div>
+        </section>
+
+        <section class="card json-card" style="margin-top: 12px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Raw Fitbit JSON</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                For debugging & future charting
+              </div>
+            </div>
+          </div>
+          <pre id="raw"></pre>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  const statusEl = document.getElementById("status");
+  const rawEl = document.getElementById("raw");
+  const dateLabel = document.getElementById("dateLabel");
+  const foodsList = document.getElementById("foodsList");
+  const workoutsList = document.getElementById("workoutsList");
+  const loadBtn = document.getElementById("loadBtn");
+
+  const todayStr = new Date().toLocaleDateString(undefined, {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+  dateLabel.textContent = todayStr;
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = value;
+  }
+
+  function resetDashboard() {
+    const ids = [
+      "steps", "caloriesOut", "distance", "activeMinutes",
+      "sedentaryMinutes", "lightMinutes", "fairlyMinutes", "veryMinutes",
+      "activityIntensityLabel",
+      "caloriesIn", "carbs", "protein", "fat", "calorieGoal",
+      "sleepMinutes", "sleepHours", "sleepEfficiency",
+      "deepMinutes", "lightSleepMinutes", "remMinutes", "wakeMinutes",
+      "sleepRecords", "timeInBed"
+    ];
+    ids.forEach(id => setText(id, "–"));
+    foodsList.innerHTML = "";
+    rawEl.textContent = "";
+    if (workoutsList) workoutsList.innerHTML = "";
+  }
+
+  let loading = false;
+  let stepsChart, sleepChart, caloriesChart;
+  let macroChart, stepsGoalChart, caloriesGoalChart, sleepGoalChart;
+
+  function buildLineChart(ctxId, labels, values, color) {
+    const ctx = document.getElementById(ctxId);
+    if (!ctx) return null;
+    return new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          borderColor: color,
+          backgroundColor: "rgba(148,163,184,0.15)",
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: color
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: "#9ca3af", font: { size: 10 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: "rgba(55,65,81,0.6)" },
+            ticks: { color: "#9ca3af", font: { size: 10 } }
+          }
+        }
+      }
+    });
+  }
+
+  function buildDonutChart(ctxId, values, labels, colors) {
+    const ctx = document.getElementById(ctxId);
+    if (!ctx) return null;
+    return new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        cutout: "65%",
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  loadBtn.addEventListener("click", async () => {
+    if (loading) return;
+    loading = true;
+    loadBtn.disabled = true;
+    loadBtn.innerHTML = '<span class="icon">⟳</span> Loading…';
+    statusEl.textContent = "Syncing…";
+    resetDashboard();
+
+    try {
+      const resp = await fetch("http://localhost:8080/fitbit-summary");
+      if (!resp.ok) {
+        throw new Error("Proxy error: " + resp.status);
+      }
+
+      const data = await resp.json();
+      const activityJson = data.activity || {};
+      const foodJson = data.food || {};
+      const sleepJson = data.sleep || {};
+
+      rawEl.textContent = JSON.stringify(data, null, 2);
+
+      // ===== Activity (today) =====
+      const summary = activityJson.summary || {};
+      setText("steps", summary.steps ?? "–");
+      setText("caloriesOut", summary.caloriesOut ?? "–");
+
+      const distances = summary.distances || [];
+      const totalDistanceObj = distances.find(d => d.activity === "total") || {};
+      const totalDistance = totalDistanceObj.distance;
+      setText(
+        "distance",
+        totalDistance !== undefined ? Number(totalDistance).toFixed(2) : "–"
+      );
+
+      const lightly = summary.lightlyActiveMinutes ?? 0;
+      const fairly = summary.fairlyActiveMinutes ?? 0;
+      const very = summary.veryActiveMinutes ?? 0;
+      const sedentary = summary.sedentaryMinutes ?? 0;
+
+      setText("sedentaryMinutes", sedentary);
+      setText("lightMinutes", lightly);
+      setText("fairlyMinutes", fairly);
+      setText("veryMinutes", very);
+      setText("activeMinutes", lightly + fairly + very);
+
+      const intensityLabel = document.getElementById("activityIntensityLabel");
+      if (intensityLabel) {
+        const totalActive = lightly + fairly + very;
+        if (totalActive >= 60) {
+          intensityLabel.textContent = "High intensity";
+        } else if (totalActive >= 30) {
+          intensityLabel.textContent = "Moderate intensity";
+        } else {
+          intensityLabel.textContent = "Low intensity";
+        }
+      }
+
+      // ===== Last 7 workouts (from workouts.activities) =====
+    // ===== Last 7 workouts (from workouts.activities) =====
+if (workoutsList) {
+  workoutsList.innerHTML = "";
+  const workouts = data.workouts?.activities || [];
+  if (workouts.length === 0) {
+    const li = document.createElement("li");
+    li.className = "list-item";
+    const label = document.createElement("div");
+    label.className = "list-label";
+    label.textContent = "No workouts logged in the last 7 days";
+    li.appendChild(label);
+    workoutsList.appendChild(li);
+  } else {
+    workouts.forEach(w => {
+      const li = document.createElement("li");
+      li.className = "list-item";
+
+      const label = document.createElement("div");
+      label.className = "list-label";
+      const type = w.activityName || w.name || "Workout"; // type/name of workout
+      const date = w.startDate || "";
+      const time = w.startTime || "";
+      const minutes = w.duration ? Math.round(w.duration / 60000) : 0;
+
+      // Example: "Yoga • 2026-02-16 @10:31"
+      label.textContent = `${type} • ${date}${time ? " @" + time : ""}`;
+
+      const value = document.createElement("div");
+      value.className = "list-value";
+      const cals = w.calories ?? 0;
+
+      // Example: "70 min • 219 kcal"
+      value.textContent = `${minutes} min • ${cals} kcal`;
+
+      li.appendChild(label);
+      li.appendChild(value);
+      workoutsList.appendChild(li);
+    });
+  }
+}
+
+
+      // ===== Food (today) =====
+      const foodSummary = foodJson.summary || {};
+      const foodGoals = foodJson.goals || {};
+
+      setText("caloriesIn", foodSummary.calories ?? "–");
+      setText(
+        "carbs",
+        foodSummary.carbs !== undefined
+          ? Number(foodSummary.carbs).toFixed(1)
+          : "–"
+      );
+      setText(
+        "protein",
+        foodSummary.protein !== undefined
+          ? Number(foodSummary.protein).toFixed(1)
+          : "–"
+      );
+      setText(
+        "fat",
+        foodSummary.fat !== undefined
+          ? Number(foodSummary.fat).toFixed(1)
+          : "–"
+      );
+      setText("calorieGoal", foodGoals.calories ?? "–");
+
+      foodsList.innerHTML = "";
+      const foods = foodJson.foods || [];
+      foods.forEach(f => {
+        const li = document.createElement("li");
+        li.className = "list-item";
+
+        const label = document.createElement("div");
+        label.className = "list-label";
+        const name = f.loggedFood?.name || "Unknown food";
+        const brand = f.loggedFood?.brand || "";
+        const amt = f.loggedFood?.amount;
+        const unit = f.loggedFood?.unit?.plural || "";
+        label.textContent =
+          (brand ? brand + " · " : "") +
+          name +
+          (amt ? ` (${amt} ${unit})` : "");
+
+        const value = document.createElement("div");
+        value.className = "list-value";
+        const cals =
+          f.nutritionalValues?.calories ??
+          f.loggedFood?.calories ??
+          0;
+        value.textContent = `${cals} kcal`;
+
+        li.appendChild(label);
+        li.appendChild(value);
+        foodsList.appendChild(li);
+      });
+
+      // Macro donut (grams)
+      const carbG = foodSummary.carbs ?? 0;
+      const proteinG = foodSummary.protein ?? 0;
+      const fatG = foodSummary.fat ?? 0;
+      const macroValues = [carbG, proteinG, fatG];
+      const macroLabels = ["Carbs", "Protein", "Fat"];
+      const macroColors = ["#22c55e", "#3b82f6", "#f97316"];
+      if (!macroChart) {
+        macroChart = buildDonutChart("macroChart", macroValues, macroLabels, macroColors);
+      } else {
+        macroChart.data.datasets[0].data = macroValues;
+        macroChart.update();
+      }
+
+      // ===== Sleep (today) =====
+      const sleepSummary = sleepJson.summary || {};
+      const stages = sleepSummary.stages || {};
+
+      const totalMinutesAsleep = sleepSummary.totalMinutesAsleep ?? 0;
+      setText("sleepMinutes", totalMinutesAsleep);
+      setText(
+        "sleepHours",
+        totalMinutesAsleep ? (totalMinutesAsleep / 60).toFixed(1) : "–"
+      );
+      setText(
+        "sleepEfficiency",
+        sleepSummary.efficiency ?? "–"
+      );
+
+      setText("deepMinutes", stages.deep ?? "–");
+      setText("lightSleepMinutes", stages.light ?? "–");
+      setText("remMinutes", stages.rem ?? "–");
+      setText("wakeMinutes", stages.wake ?? "–");
+      setText(
+        "sleepRecords",
+        sleepSummary.totalSleepRecords ?? "–"
+      );
+      setText(
+        "timeInBed",
+        sleepSummary.totalTimeInBed ?? "–"
+      );
+
+      // ===== 7-day series for charts =====
+      const stepsSeries = data.stepsSeries?.["activities-steps"] || [];
+      const sleepSeries = data.sleepSeries?.["sleep-minutesAsleep"] || [];
+      const caloriesSeries = data.caloriesSeries?.["foods-log-caloriesIn"] || [];
+
+      const labels = stepsSeries.map(p => p.dateTime);
+      const stepValues = stepsSeries.map(p => Number(p.value) || 0);
+      const sleepValues = sleepSeries.map(p => Number(p.value) || 0);
+      const calValues = caloriesSeries.map(p => Number(p.value) || 0);
+
+      if (!stepsChart) {
+        stepsChart = buildLineChart("stepsChart", labels, stepValues, "#4ade80");
+      } else {
+        stepsChart.data.labels = labels;
+        stepsChart.data.datasets[0].data = stepValues;
+        stepsChart.update();
+      }
+
+      if (!sleepChart) {
+        sleepChart = buildLineChart("sleepChart", labels, sleepValues, "#60a5fa");
+      } else {
+        sleepChart.data.labels = labels;
+        sleepChart.data.datasets[0].data = sleepValues;
+        sleepChart.update();
+      }
+
+      if (!caloriesChart) {
+        caloriesChart = buildLineChart("caloriesChart", labels, calValues, "#fbbf24");
+      } else {
+        caloriesChart.data.labels = labels;
+        caloriesChart.data.datasets[0].data = calValues;
+        caloriesChart.update();
+      }
+
+      // ===== Goal donuts =====
+      const goals = activityJson.goals || {};
+      const stepGoal = goals.steps ?? 10000;
+      const stepsToday = summary.steps ?? 0;
+      const caloriesGoal = foodGoals.calories ?? 0;
+      const sleepTargetMinutes = 8 * 60;
+
+      // Steps vs goal
+      let stepsPct = stepGoal ? stepsToday / stepGoal : 0;
+      stepsPct = Math.min(stepsPct, 1);
+      const stepsGoalVals = [
+        Math.round(stepsPct * 100),
+        Math.max(0, 100 - Math.round(stepsPct * 100))
+      ];
+      if (!stepsGoalChart) {
+        stepsGoalChart = buildDonutChart(
+          "stepsGoalChart",
+          stepsGoalVals,
+          ["Done", "Remaining"],
+          ["#4ade80", "rgba(55,65,81,0.7)"]
+        );
+      } else {
+        stepsGoalChart.data.datasets[0].data = stepsGoalVals;
+        stepsGoalChart.update();
+      }
+
+      // Calories vs goal
+      const cIn = foodSummary.calories ?? 0;
+      let calPct = caloriesGoal ? cIn / caloriesGoal : 0;
+      calPct = Math.min(calPct, 1);
+      const calGoalVals = [
+        Math.round(calPct * 100),
+        Math.max(0, 100 - Math.round(calPct * 100))
+      ];
+      if (!caloriesGoalChart) {
+        caloriesGoalChart = buildDonutChart(
+          "caloriesGoalChart",
+          calGoalVals,
+          ["Done", "Remaining"],
+          ["#f97316", "rgba(55,65,81,0.7)"]
+        );
+      } else {
+        caloriesGoalChart.data.datasets[0].data = calGoalVals;
+        caloriesGoalChart.update();
+      }
+
+      // Sleep vs target
+      const sleepMinutesToday = totalMinutesAsleep;
+      let sleepPct = sleepMinutesToday / sleepTargetMinutes;
+      sleepPct = Math.min(sleepPct, 1);
+      const sleepGoalVals = [
+        Math.round(sleepPct * 100),
+        Math.max(0, 100 - Math.round(sleepPct * 100))
+      ];
+      if (!sleepGoalChart) {
+        sleepGoalChart = buildDonutChart(
+          "sleepGoalChart",
+          sleepGoalVals,
+          ["Done", "Remaining"],
+          ["#60a5fa", "rgba(55,65,81,0.7)"]
+        );
+      } else {
+        sleepGoalChart.data.datasets[0].data = sleepGoalVals;
+        sleepGoalChart.update();
+      }
+
+      statusEl.textContent = "Synced.";
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Error loading data.";
+      resetDashboard();
+    } finally {
+      loading = false;
+      loadBtn.disabled = false;
+      loadBtn.innerHTML = '<span class="icon">⟳</span> Refresh day';
+    }
+  });
+</script>
+
+</body>
+</html>
